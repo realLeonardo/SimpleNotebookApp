@@ -6,6 +6,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 public class WriteNoteActivity extends AppCompatActivity {
@@ -33,6 +34,14 @@ public class WriteNoteActivity extends AppCompatActivity {
 
         contentInput = findViewById(R.id.contentText);
         contentInput.setText(content);
+
+        // NOTE: change button text dynamically
+        Button confirmButton = findViewById(R.id.confirmButton);
+        if(title == null || content == null){
+            confirmButton.setText("Create Note");
+        } else {
+            confirmButton.setText("Confirm Changes");
+        }
     }
 
     public void confirmButtonClickHandler(View view) {
@@ -46,6 +55,11 @@ public class WriteNoteActivity extends AppCompatActivity {
         intent.putExtra(HomeActivity.EXTRA_CONTENT, content);
 
         setResult(Activity.RESULT_OK, intent);
+        finish();
+    }
+
+    // NOTE: back button clicked
+    public void backButtonClickHandler(View view) {
         finish();
     }
 }
