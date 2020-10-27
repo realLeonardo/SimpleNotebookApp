@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:elevation="10dp"
     tools:context=".HomeActivity"
     tools:visibility="visible">
 
@@ -71,11 +72,10 @@
             android:id="@+id/tasksList"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:padding="13dp"
             android:divider="@null"
             android:dividerHeight="0dp"
-            android:scrollbars="none">
-        </ListView>
+            android:padding="13dp"
+            android:scrollbars="none"></ListView>
 
     </LinearLayout>
 
@@ -92,33 +92,35 @@
             android:id="@+id/btnsLayout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:gravity="center|right"
-            android:orientation="vertical"
-            android:padding="13dp">
+            android:gravity="bottom|right"
+            android:orientation="vertical">
 
             <Button
                 android:id="@+id/createBtn"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_marginRight="15dp"
                 android:layout_marginBottom="15dp"
+                android:background="#FFFFFF"
                 android:onClick="createBtnClickHandler"
                 android:text="+"
                 android:textAlignment="center"
-                android:textSize="24sp"
+                android:textSize="30sp"
                 android:textStyle="bold" />
 
             <EditText
                 android:id="@+id/taskInput"
                 android:layout_width="match_parent"
-                android:layout_height="57dp"
-                android:background="#F0F0F0"
+                android:layout_height="80dp"
+                android:background="@drawable/task_input_radius_border"
                 android:ems="10"
                 android:focusedByDefault="true"
                 android:hint="Type your task right here~"
                 android:inputType="textPersonName"
-                android:paddingStart="8dp"
-                android:paddingEnd="8dp"
-                android:paddingBottom="8dp"
+                android:paddingStart="15dp"
+                android:paddingEnd="15dp"
+                android:paddingBottom="20dp"
+                android:textSize="18sp"
                 tools:visibility="visible" />
 
         </LinearLayout>

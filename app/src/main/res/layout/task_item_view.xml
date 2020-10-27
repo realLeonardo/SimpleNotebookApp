@@ -5,7 +5,8 @@
     android:layout_width="match_parent">
 
     <LinearLayout
-        style="@style/TaskContainerStyle">
+        style="@style/TaskContainerStyle"
+        android:background="@drawable/radius_border">
 
         <CheckBox
             android:id="@+id/checkBox"

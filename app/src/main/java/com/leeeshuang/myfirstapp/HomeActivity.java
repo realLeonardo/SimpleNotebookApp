@@ -74,8 +74,8 @@ class NoteListAdapter extends BaseAdapter {
         View vi = convertView;
         if (vi == null)
             vi = inflater.inflate(R.layout.note_item_view, null);
-        TextView titleText = (TextView) vi.findViewById(R.id.title);
-        TextView contentText = (TextView) vi.findViewById(R.id.content);
+        TextView titleText = vi.findViewById(R.id.title);
+        TextView contentText = vi.findViewById(R.id.content);
         titleText.setText(data.get(position).title);
         contentText.setText(data.get(position).content);
         return vi;
@@ -115,7 +115,7 @@ class TaskListAdapter extends BaseAdapter {
         View vi = convertView;
         if (vi == null)
             vi = inflater.inflate(R.layout.task_item_view, null);
-        CheckBox checkBox = (CheckBox) vi.findViewById(R.id.checkBox);
+        CheckBox checkBox = vi.findViewById(R.id.checkBox);
         checkBox.setText(data.get(position).content);
         checkBox.setActivated(data.get(position).status);
         return vi;
@@ -199,6 +199,9 @@ public class HomeActivity extends AppCompatActivity {
         if (shownStatus == 0) {
             return;
         }
+
+        // NOTE: hide task input
+        taskInput.setVisibility(View.GONE);
 
         shownStatus = 0;
         notesButton.setTextColor(getColor(R.color.black));
@@ -292,10 +295,19 @@ public class HomeActivity extends AppCompatActivity {
         Note n1 = new Note("形式化作业！！！", "后天就要截止啦");
         Note n2 = new Note("Idea in 10/21", "Colorful output stream in cpp.");
         Note n3 = new Note("Money-=18", "学校食堂午饭");
+        Note n4 = new Note("经典的吹泡泡项目源码", "cjson网址：https://sourceforge.net/projects/cjson/\n" +
+                "MyTinySTL网址：https://github.com/Alinshans/MyTinySTL\n" +
+                "oatpp网址：https://github.com/oatpp/oatpp\n" +
+                "Tinyhttpd网址：https://github.com/EZLippi/Tinyhttpd/blob/master/httpd.c\n" +
+                "nginx网址：http://nginx.org/\n" +
+                "Redis网址：https://redis.io/download");
+        Note n5 = new Note("安卓课堂笔记 10/20", "Pager 是 SQLite 的核心模块之一，充当了多种重要角色。作为一个事务管理器，它通过并发控制和故障恢复实现事务的 ACID 特性，负责事务的原子提交和回滚；作为一个页管理器，它处理从文件中读写数据页，并执行文件空间管理工作；作为日志管理器，它负责写日志记录到日志文件；作为锁管理器，它确保事务在访问数据页之前，一定先对数据文件上锁，实现并发控制。本质上来说，Pager 模块实现了存储的持久性和事务的原子性。总结来说，Pager 模块主要由4个子模块组成：事务管理模块、锁管理模块、日志模块和缓存模块，事务模块的实现依赖于其它3个子模块。因此 Pager 模块最核心的功能实质是由缓存模块、日志管理器和锁管理器完成。Pager 模块利用 Pager 对象来跟踪文件锁相关的信息、日志状态、数据库状态等。对于同一个文件、一个进程可能有多个 Pager 对象，这些对象之间都是相互独立的。对于共享缓存模式，每个数据文件只有一个 Pager 对象，所有连接共享这个 Pager 对象。");
 
         notesDataArr.add(n1);
+        notesDataArr.add(n4);
         notesDataArr.add(n2);
         notesDataArr.add(n3);
+        notesDataArr.add(n5);
 
         Task t1 = new Task(false, "Learn Android Activity");
         Task t2 = new Task(false, "Play basketball 🏀~");
