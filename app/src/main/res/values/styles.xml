@@ -13,11 +13,10 @@
         <item name="android:fontWeight">500</item>
     </style>
 
-    <!--  NOTE LIST STYLE BEGIN  -->
-    <style name="NoteContainerStyle">
+    <!--  APP LIST STYLE BEGIN  -->
+    <style name="AppContainerStyle">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:minHeight">30dp</item>
         <item name="android:background">#FFFFFF</item>
         <item name="android:orientation">vertical</item>
         <item name="android:layout_marginBottom">13dp</item>
@@ -25,9 +24,9 @@
         <item name="android:paddingStart">20dp</item>
         <item name="android:paddingEnd">20dp</item>
         <item name="android:clickable">true</item>
-        <item name="android:onClick">createBtnClickHandler</item>
+        <item name="android:onClick">appDetailBtnClickHandler</item>
     </style>
-    <style name="NoteTitleTextStyle">
+    <style name="AppTitleTextStyle">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:text">TextView</item>
@@ -37,7 +36,7 @@
         <item name="android:ellipsize">end</item>
         <item name="android:singleLine">true</item>
     </style>
-    <style name="NoteContentTextStyle">
+    <style name="AppContentTextStyle">
         <item name="android:layout_marginTop">6dp</item>
         <item name="android:textSize">13sp</item>
         <item name="android:layout_width">wrap_content</item>
@@ -48,21 +47,12 @@
     </style>
     <!--  NOTE LIST STYLE END  -->
 
-    <!--  TASK ITEM STYLE  -->
-    <style name="TaskContainerStyle">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">60dp</item>
-        <item name="android:background">#FFFFFF</item>
-        <item name="android:orientation">vertical</item>
-        <item name="android:layout_marginBottom">13dp</item>
-        <item name="android:padding">15dp</item>
-        <item name="android:paddingStart">20dp</item>
-        <item name="android:paddingEnd">20dp</item>
-        <item name="android:clickable">true</item>
-    </style>
-    <style name="TaskCheckBoxStyle">
+    <style name="DashboardSubtitleTextStyle">
+        <item name="android:layout_marginTop">6dp</item>
+        <item name="android:textSize">26sp</item>
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:paddingLeft">5dp</item>
+        <item name="android:textColor">@color/black</item>
     </style>
+
 </resources>

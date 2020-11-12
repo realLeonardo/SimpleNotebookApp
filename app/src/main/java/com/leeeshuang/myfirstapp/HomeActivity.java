@@ -1,52 +1,73 @@
 package com.leeeshuang.myfirstapp;
 
 import android.annotation.SuppressLint;
+import android.app.usage.UsageStats;
+import android.app.usage.UsageStatsManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.BaseAdapter;
-import android.widget.CheckBox;
-import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.charts.PieChart;
+import com.leeeshuang.myfirstapp.model.UsageLog;
+import com.leeeshuang.myfirstapp.service.DatabaseService;
+import com.leeeshuang.myfirstapp.service.MPChartHelper;
+import com.leeeshuang.myfirstapp.util.AppUtils;
+import com.leeeshuang.myfirstapp.view.ScrollListView;
+
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
-class Note {
-    public String title;
-    public String content;
+class AppItem {
+    public String name;
+    public long duration;
+    public String durationStr;
+    public Drawable icon;
+    public String packageName;
+    int rate;
 
-    Note(String title, String content) {
-        this.title = title;
-        this.content = content;
+    AppItem(String name, long duration, Drawable icon, int rate, String packageName) {
+        this.name = name;
+        this.duration = duration;
+        this.icon = icon;
+        this.rate = rate;
+        this.packageName = packageName;
+
+        // NOTE: 在这里进行转换
+        // duration 毫秒
+        if(duration / 1000 < 60) {
+            this.durationStr = "less than 1 min";
+        } else {
+            this.durationStr = (int) duration/1000/60 + " mins";
+        }
     }
 }
 
-class Task {
-    public boolean status;
-    public String content;
-
-    Task(boolean status, String content) {
-        this.status = status;
-        this.content = content;
-    }
-}
-
-class NoteListAdapter extends BaseAdapter {
+class AppListAdapter extends BaseAdapter {
 
     Context context;
-    ArrayList<Note> data;
+    ArrayList<AppItem> data;
     private static LayoutInflater inflater = null;
 
-    public NoteListAdapter(Context context, ArrayList<Note> data) {
+    public AppListAdapter(Context context, ArrayList<AppItem> data) {
         this.context = context;
         this.data = data;
         inflater = (LayoutInflater) context
@@ -72,76 +93,34 @@ class NoteListAdapter extends BaseAdapter {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         View vi = convertView;
-        if (vi == null)
-            vi = inflater.inflate(R.layout.note_item_view, null);
-        TextView titleText = vi.findViewById(R.id.title);
-        TextView contentText = vi.findViewById(R.id.content);
-        titleText.setText(data.get(position).title);
-        contentText.setText(data.get(position).content);
-        return vi;
-    }
-}
+        if (vi == null){
+            vi = inflater.inflate(R.layout.app_item_view, null);
+        }
 
-class TaskListAdapter extends BaseAdapter {
-    Context context;
-    ArrayList<Task> data;
-    private static LayoutInflater inflater = null;
+        TextView nameText = vi.findViewById(R.id.appName);
+        TextView durationText = vi.findViewById(R.id.duration);
+        ImageView icon = vi.findViewById(R.id.icon);
+        ProgressBar progressBar = vi.findViewById(R.id.progressBar);
+        TextView packageNameText = vi.findViewById(R.id.packageName);
 
-    public TaskListAdapter(Context context, ArrayList<Task> data) {
-        this.context = context;
-        this.data = data;
-        inflater = (LayoutInflater) context
-                .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-    }
-
-    @Override
-    public int getCount() {
-        return data.size();
-    }
-
-    @Override
-    public Object getItem(int position) {
-        return data.get(position);
-    }
-
-    @Override
-    public long getItemId(int position) {
-        return position;
-    }
-
-    @SuppressLint("InflateParams")
-    @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        View vi = convertView;
-        if (vi == null)
-            vi = inflater.inflate(R.layout.task_item_view, null);
-        CheckBox checkBox = vi.findViewById(R.id.checkBox);
-        checkBox.setText(data.get(position).content);
-        checkBox.setActivated(data.get(position).status);
+        nameText.setText(data.get(position).name);
+        durationText.setText(data.get(position).durationStr);
+        // NOTE: 图标
+        icon.setImageDrawable(data.get(position).icon);
+        progressBar.setProgress(data.get(position).rate);
+        packageNameText.setText(data.get(position).packageName);
         return vi;
     }
 }
 
 public class HomeActivity extends AppCompatActivity {
-    public static final String EXTRA_ID = "com.example.myfirstapp.ID";
-    public static final String EXTRA_TITLE = "com.example.myfirstapp.TITLE";
-    public static final String EXTRA_CONTENT = "com.example.myfirstapp.CONTENT";
-
-    private final int ANIMATE_DURATION = 300;
     private int shownStatus;
 
-    private ListView notesList;
-    private ListView tasksList;
+    private final ArrayList<AppItem> appsDataArr = new ArrayList<>();
 
-    private final ArrayList<Note> notesDataArr = new ArrayList<>();
-    private final ArrayList<Task> tasksDataArr = new ArrayList<>();
-
-    private NoteListAdapter notesAdapter;
-    private TaskListAdapter tasksAdapter;
-
-    private TextView notesButton;
-    private TextView tasksButton;
-    private EditText taskInput;
+    private View dashboardContainer;
+    private TextView dashboardButton;
+    private TextView focusModeButton;
 
     @SuppressLint("CutPasteId")
     @Override
@@ -149,173 +128,246 @@ public class HomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        notesList = findViewById(R.id.notesList);
-        tasksList = findViewById(R.id.tasksList);
+        dashboardContainer = findViewById(R.id.dashboardContainer);
+        ScrollListView appListContainer = findViewById(R.id.appList);
 
-        this.mockFakeData();
+        AppListAdapter appsAdapter = new AppListAdapter(this, appsDataArr);
+        appListContainer.setAdapter(appsAdapter);
 
-        notesAdapter = new NoteListAdapter(this, notesDataArr);
-        notesList.setAdapter(notesAdapter);
+        // NOTE: initialize room db
+        DatabaseService.create(getApplicationContext());
+        this.initData();
 
-        tasksAdapter = new TaskListAdapter(this, tasksDataArr);
-        tasksList.setAdapter(tasksAdapter);
+        dashboardButton = findViewById(R.id.dashboardBtn);
+        focusModeButton = findViewById(R.id.focusModeBtn);
 
-        notesButton = findViewById(R.id.notesBtn);
-        tasksButton = findViewById(R.id.tasksBtn);
-
-        taskInput = findViewById(R.id.taskInput);
-        taskInput.setVisibility(View.GONE);
+        drawCharts();
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+    }
 
-        if(data == null) {
-            return;
-        }
+    @SuppressLint("SetTextI18n")
+    public void toggleAppListView(View view) {
+        final int DEFAULT_HEIGHT = 750;
+        LinearLayout appListLayout = findViewById(R.id.appListLayout);
+        TextView toggleBtnText = findViewById(R.id.toggleButton);
 
-        String title = data.getStringExtra(EXTRA_TITLE);
-        String content = data.getStringExtra(EXTRA_CONTENT);
-        int targetID = data.getIntExtra(EXTRA_ID, -1);
-
-        // Create item
-        if (targetID < 0) {
-            notesDataArr.add(0, new Note(title, content));
-            notesAdapter.notifyDataSetChanged();
+        if(appListLayout.getHeight() > DEFAULT_HEIGHT){
+            appListLayout.setLayoutParams(new LinearLayout.LayoutParams(appListLayout.getWidth(), DEFAULT_HEIGHT));
+            toggleBtnText.setText("show more");
         } else {
-            Note n = notesDataArr.get(targetID);
-
-            if(n != null){
-                n.title = title;
-                n.content = content;
-                notesAdapter.notifyDataSetChanged();
-            }
+            appListLayout.setLayoutParams(new LinearLayout.LayoutParams(appListLayout.getWidth(), LinearLayout.LayoutParams.WRAP_CONTENT));
+            toggleBtnText.setText("hide detail");
         }
     }
 
+
     @SuppressLint("ResourceAsColor")
-    public void showNotesListContainer(View view) {
+    public void showDashboardContainer(View view) {
         if (shownStatus == 0) {
             return;
         }
 
-        // NOTE: hide task input
-        taskInput.setVisibility(View.GONE);
-
         shownStatus = 0;
-        notesButton.setTextColor(getColor(R.color.black));
-        tasksButton.setTextColor(getColor(R.color.primary));
+        dashboardButton.setTextColor(getColor(R.color.black));
+        focusModeButton.setTextColor(getColor(R.color.primary));
 
-        tasksList.setVisibility(View.GONE);
-        notesList.setAlpha(0f);
-        notesList.setVisibility(View.VISIBLE);
-        notesList.animate()
+        dashboardContainer.setAlpha(0f);
+        dashboardContainer.setVisibility(View.VISIBLE);
+        int ANIMATE_DURATION = 300;
+        dashboardContainer.animate()
                 .alpha(1f)
                 .setDuration(ANIMATE_DURATION)
                 .setListener(null);
     }
 
     @SuppressLint("ResourceAsColor")
-    public void showTasksListContainer(View view) {
+    public void showFocusModeContainer(View view) {
         if(shownStatus == 1) {
             return;
         }
 
         shownStatus = 1;
-        tasksButton.setTextColor(getColor(R.color.black));
-        notesButton.setTextColor(getColor(R.color.primary));
+        focusModeButton.setTextColor(getColor(R.color.black));
+        dashboardButton.setTextColor(getColor(R.color.primary));
 
-        notesList.setVisibility(View.GONE);
-        tasksList.setAlpha(0f);
-        tasksList.setVisibility(View.VISIBLE);
-        tasksList.animate()
-                .alpha(1f)
-                .setDuration(ANIMATE_DURATION)
-                .setListener(null);
+        dashboardContainer.setVisibility(View.GONE);
     }
 
-    public void createBtnClickHandler(View view) {
-        // Create Task Button Clicked
-        if (shownStatus == 1) {
-            if (taskInput.getVisibility() == View.VISIBLE) {
-                String content = taskInput.getText().toString();
+    public void appDetailBtnClickHandler(View view) {
+        TextView t = view.findViewById(R.id.packageName);
+        String pn = (String) t.getText();
+        // app item clicked
+        Intent intent = new Intent(this, AppUsageDetailActivity.class);
+        intent.putExtra("PACKAGE_NAME", pn);
 
-                // NOTE: clear input
-                taskInput.setText("");
+        startActivityForResult(intent, 1);
+    }
 
-                // NOTE: hide keyboard
-                InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-                taskInput.setVisibility(View.GONE);
+    private void initData(){
+        // NOTE: 获取权限
+        // Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
+        // startActivity(intent);
 
-                if (content.isEmpty()) {
-                    return;
+        List<UsageLog> usageLogs =  DatabaseService.getAll();
+
+        long lastUsedAt;
+
+        if(usageLogs.size() != 0){
+            lastUsedAt = usageLogs.get(usageLogs.size()-1).lastUsedAt;
+        } else {
+            // NOTE: 5 days ago
+            lastUsedAt = System.currentTimeMillis() - 1000*3600*24*5;
+        }
+
+        UsageStatsManager manager=(UsageStatsManager)getApplicationContext().getSystemService(USAGE_STATS_SERVICE);
+        Map<String, UsageStats> allUsageStats = manager.queryAndAggregateUsageStats(lastUsedAt, System.currentTimeMillis());
+
+        for (String i : allUsageStats.keySet()) {
+            UsageStats us = allUsageStats.get(i);
+            assert us != null;
+            if(us.getTotalTimeInForeground() != 0 && us.getLastTimeStamp() > lastUsedAt){
+                long duration = us.getTotalTimeInForeground();
+                UsageLog ul = new UsageLog(us.getPackageName(), us.getLastTimeStamp(), duration);
+                DatabaseService.insert(ul);
+                usageLogs.add(ul);
+            }
+        }
+
+        DatabaseService.usageLogs = usageLogs;
+        usageLogs = DatabaseService.getFrom(AppUtils.getDayTimestamp(), true);
+
+        // NOTE: Data handler
+        usageLogs = usageLogs.stream()
+                .filter((UsageLog ul) -> ul.duration >= 1000*10)
+                .collect(Collectors.toList());
+        usageLogs.sort((u1, u2) -> (int) (u2.duration - u1.duration));
+        PackageManager pm = getApplicationContext().getPackageManager();
+        long count = 0;
+
+        // NOTE: display app list
+        for(UsageLog ul: usageLogs) {
+            try {
+                ApplicationInfo appInfo = this.getPackageManager().getApplicationInfo(ul.name, 0);
+
+                Drawable icon = pm.getApplicationIcon(appInfo);
+                String name = (String) pm.getApplicationLabel(appInfo);
+                int rate = 100;
+                if(count == 0){
+                    count = ul.duration;
+                } else {
+                    rate = (int) (((double) ul.duration / (double) count) * 100);
+
+                    if(rate < 5){
+                        rate = 5;
+                    }
                 }
 
-                tasksDataArr.add(0, new Task(false, content));
-                tasksAdapter.notifyDataSetChanged();
-            } else {
-                // NOTE: animated toggle
-                taskInput.setAlpha(0f);
-                taskInput.setVisibility(View.VISIBLE);
-                taskInput.animate()
-                        .alpha(1f)
-                        .setDuration(ANIMATE_DURATION)
-                        .setListener(null);
-
-                // NOTE: open keyboard
-                taskInput.requestFocus();
-                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.showSoftInput(taskInput, InputMethodManager.SHOW_IMPLICIT);
+                appsDataArr.add(new AppItem(name, ul.duration, icon, rate, ul.name));
+            } catch (PackageManager.NameNotFoundException e) {
+                // e.printStackTrace();
             }
-        } else {
-            // note item clicked
-            Intent intent = new Intent(this, WriteNoteActivity.class);
-            if (view instanceof LinearLayout) {
-                View titleView = ((LinearLayout) view).getChildAt(0);
-                View contentView = ((LinearLayout) view).getChildAt(1);
-
-                String title = ((TextView) titleView).getText().toString();
-                String content = ((TextView) contentView).getText().toString();
-                int index = notesList.getPositionForView(view);
-
-                intent.putExtra(EXTRA_ID, index);
-                intent.putExtra(EXTRA_TITLE, title);
-                intent.putExtra(EXTRA_CONTENT, content);
-            }
-
-            startActivityForResult(intent, 1);
         }
     }
 
-    // NOTE: JUST FOR TEST
-    private void mockFakeData() {
-        // NOTE: Mock fake data
-        Note n1 = new Note("形式化作业！！！", "后天就要截止啦");
-        Note n2 = new Note("经典的吹泡泡项目源码", "cjson网址：https://sourceforge.net/projects/cjson/\n" +
-                "MyTinySTL网址：https://github.com/Alinshans/MyTinySTL\n" +
-                "oatpp网址：https://github.com/oatpp/oatpp\n" +
-                "Tinyhttpd网址：https://github.com/EZLippi/Tinyhttpd/blob/master/httpd.c\n" +
-                "nginx网址：http://nginx.org/\n" +
-                "Redis网址：https://redis.io/download");
-        Note n3 = new Note("Idea in 10/21", "Colorful output stream in cpp.");
-        Note n4 = new Note("安卓课堂笔记 10/20", "Pager 是 SQLite 的核心模块之一，充当了多种重要角色。作为一个事务管理器，它通过并发控制和故障恢复实现事务的 ACID 特性，负责事务的原子提交和回滚；作为一个页管理器，它处理从文件中读写数据页，并执行文件空间管理工作；作为日志管理器，它负责写日志记录到日志文件；作为锁管理器，它确保事务在访问数据页之前，一定先对数据文件上锁，实现并发控制。本质上来说，Pager 模块实现了存储的持久性和事务的原子性。总结来说，Pager 模块主要由4个子模块组成：事务管理模块、锁管理模块、日志模块和缓存模块，事务模块的实现依赖于其它3个子模块。因此 Pager 模块最核心的功能实质是由缓存模块、日志管理器和锁管理器完成。Pager 模块利用 Pager 对象来跟踪文件锁相关的信息、日志状态、数据库状态等。对于同一个文件、一个进程可能有多个 Pager 对象，这些对象之间都是相互独立的。对于共享缓存模式，每个数据文件只有一个 Pager 对象，所有连接共享这个 Pager 对象。");
+    private void drawCharts() {
+        drawLineChart();
+        drawPieChart();
+    }
 
-        notesDataArr.add(n1);
-        notesDataArr.add(n2);
-        notesDataArr.add(n3);
-        notesDataArr.add(n4);
+    private void drawLineChart() {
+        List<String> xLAxisValues = new ArrayList<>();
+        List<Float> yLAxisValues = new ArrayList<>();
 
-        Task t1 = new Task(false, "Learn Android Activity");
-        Task t2 = new Task(false, "Play basketball 🏀~");
-        Task t3 = new Task(false, "天冷了🥶，买几件衣服吧");
-        Task t4 = new Task(false, "二刺猿和 linux 很搭！！！");
+        // 横坐标
+        xLAxisValues.add("00:00");
+        xLAxisValues.add("");
+        xLAxisValues.add("");
+        xLAxisValues.add("06:00");
+        xLAxisValues.add("");
+        xLAxisValues.add("");
+        xLAxisValues.add("12:00");
+        xLAxisValues.add("");
+        xLAxisValues.add("");
+        xLAxisValues.add("18:00");
+        xLAxisValues.add("");
+        xLAxisValues.add("");
+        xLAxisValues.add("23:00");
 
-        tasksDataArr.add(t1);
-        tasksDataArr.add(t2);
-        tasksDataArr.add(t3);
-        tasksDataArr.add(t4);
+        List<Long> timeList = AppUtils.getDayTimestamps();
+
+        int allDuration = 0;
+        int count = 0;
+        for(; count<timeList.size()-1; count++){
+            List<UsageLog> usageLogs = DatabaseService.getFromTo(timeList.get(count), timeList.get(count+1));
+
+            long amount = 0;
+            for(UsageLog us: usageLogs){
+                amount+=us.duration;
+            }
+
+            allDuration += amount;
+
+            yLAxisValues.add((float)(amount / 1000 / 3600));
+        }
+
+        yLAxisValues.add((float)(0));
+
+        TextView allDurationTextView = findViewById(R.id.AllDataTitle);
+        String allDurationText;
+        allDuration = allDuration / 1000 / 3600;
+        if(allDuration<60){
+            allDurationText = allDuration + " mins";
+        }else {
+            allDurationText = allDuration /60 + " hrs " + allDuration%60 + " mins";
+        }
+
+        allDurationTextView.setText(allDurationText);
+
+        LineChart lineChart = findViewById(R.id.allDataLineChart);
+        lineChart.setTouchEnabled(false);
+
+        MPChartHelper.setLineChart(lineChart, xLAxisValues, yLAxisValues, "");
+    }
+
+    @SuppressLint("SetTextI18n")
+    private void drawPieChart() {
+        PieChart pieChart = findViewById(R.id.pieChart);
+
+        List<UsageLog> usageLogs = DatabaseService.getFrom(AppUtils.getDayTimestamp(), false);
+        PackageManager pm = getApplicationContext().getPackageManager();
+        HashMap<String, Integer> map = new HashMap<>();
+
+        for(UsageLog ul: usageLogs) {
+            try {
+                ApplicationInfo appInfo = this.getPackageManager().getApplicationInfo(ul.name, 0);
+                String name = (String) pm.getApplicationLabel(appInfo);
+
+                int count = map.containsKey(name) ? map.get(name) : 0;
+                map.put(name, count + 1);
+            } catch (PackageManager.NameNotFoundException e) {
+                // e.printStackTrace();
+            }
+        }
+
+        TextView countTextView = findViewById(R.id.CountDataTitle);
+        countTextView.setText("App Opened " + usageLogs.size() + " times");
+
+        Map<String, Integer> pieValues = new LinkedHashMap<>();
+        int count = 0;
+
+        for (String i : map.keySet()) {
+            pieValues.put(i, map.get(i));
+
+            if(count++ >= 3){
+                break;
+            }
+        }
+
+        MPChartHelper.setPieChart(pieChart, pieValues,"",true);
     }
 
 }

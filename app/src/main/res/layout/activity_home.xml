@@ -3,128 +3,203 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:elevation="10dp"
     tools:context=".HomeActivity"
     tools:visibility="visible">
 
     <LinearLayout
         android:id="@+id/homeContainer"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:background="#F0F0F0"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="#FFFFFF"
+        android:isScrollContainer="false"
+        android:nestedScrollingEnabled="false"
         android:orientation="vertical"
         android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0">
 
         <LinearLayout
             android:id="@+id/tabbar"
-            android:layout_width="200dp"
+            android:layout_width="match_parent"
             android:layout_height="54dp"
             android:layout_marginStart="13dp"
             android:layout_marginTop="50dp"
+            android:layout_marginEnd="13dp"
             android:orientation="horizontal">
 
             <TextView
-                android:id="@+id/notesBtn"
+                android:id="@+id/dashboardBtn"
                 style="@style/SelectedTabStyle"
-                android:layout_width="10dp"
+                android:layout_width="160dp"
                 android:layout_height="match_parent"
                 android:layout_marginEnd="10dp"
-                android:layout_weight="1"
+                android:layout_weight="0"
                 android:clickable="true"
                 android:fontFamily="sans-serif-light"
                 android:gravity="center"
-                android:onClick="showNotesListContainer"
-                android:text="Notes"
+                android:onClick="showDashboardContainer"
+                android:text="Dashboard"
+                android:textAlignment="textStart"
                 android:textColor="@color/black"
                 android:textFontWeight="500" />
 
             <TextView
-                android:id="@+id/tasksBtn"
+                android:id="@+id/focusModeBtn"
                 style="@style/NormalTabStyle"
-                android:layout_width="13dp"
+                android:layout_width="200dp"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
+                android:layout_weight="0"
                 android:clickable="true"
                 android:fontFamily="sans-serif-light"
                 android:gravity="center"
-                android:onClick="showTasksListContainer"
-                android:text="Tasks"
+                android:onClick="showFocusModeContainer"
+                android:text="Focus Mode"
+                android:textAlignment="textStart"
                 android:textColor="@color/primary"
                 android:textFontWeight="500" />
 
         </LinearLayout>
 
-        <ListView
-            android:id="@+id/notesList"
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/dashboardContainer"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:divider="@null"
-            android:dividerHeight="0dp"
-            android:padding="13dp"
-            android:scrollbars="none" />
+            android:fillViewport="true"
+            android:scrollbarSize="0dp">
 
-        <ListView
-            android:id="@+id/tasksList"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:divider="@null"
-            android:dividerHeight="0dp"
-            android:padding="13dp"
-            android:scrollbars="none"></ListView>
+            <LinearLayout
+                android:id="@+id/Dashboard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:isScrollContainer="true"
+                android:orientation="vertical"
+                android:padding="13dp">
+
+                <LinearLayout
+                    android:id="@+id/AllDataContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/AllDataTitle"
+                        style="@style/DashboardSubtitleTextStyle"
+                        android:text="3 hrs 6 mins" />
+
+                    <com.github.mikephil.charting.charts.LineChart
+                        android:id="@+id/allDataLineChart"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"></com.github.mikephil.charting.charts.LineChart>
+                </LinearLayout>
+
+                <View
+                    android:id="@+id/divider"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginBottom="10dp"
+                    android:background="?android:attr/listDivider" />
+
+                <LinearLayout
+                    android:id="@+id/AppDataContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/AppDataTitle"
+                        style="@style/DashboardSubtitleTextStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="App Screen time" />
+
+                    <LinearLayout
+                        android:id="@+id/appListLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="260dp"
+                        android:orientation="vertical">
+
+                        <com.leeeshuang.myfirstapp.view.ScrollListView
+                            android:id="@+id/appList"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:divider="@null"
+                            android:dividerHeight="0dp"
+                            android:padding="13dp"
+                            android:paddingBottom="0dp"
+                            android:scrollbars="none"></com.leeeshuang.myfirstapp.view.ScrollListView>
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/toggleButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="10dp"
+                        android:layout_weight="1"
+                        android:clickable="true"
+                        android:onClick="toggleAppListView"
+                        android:text="show more"
+                        android:textAlignment="center" />
+
+                    <!--                    <ListView-->
+                    <!--                        android:id="@+id/appList"-->
+                    <!--                        android:layout_width="match_parent"-->
+                    <!--                        android:layout_height="400dp"-->
+                    <!--                        android:divider="@null"-->
+                    <!--                        android:dividerHeight="0dp"-->
+                    <!--                        android:padding="13dp"-->
+                    <!--                        android:scrollbars="none">-->
+
+                    <!--                    </ListView>-->
+
+                </LinearLayout>
+
+                <View
+                    android:id="@+id/divider2"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginBottom="10dp"
+                    android:background="?android:attr/listDivider" />
+
+                <LinearLayout
+                    android:id="@+id/CountDataContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="300dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/CountDataTitle"
+                        style="@style/DashboardSubtitleTextStyle"
+                        android:text="App Opened 0 times" />
+
+                    <com.github.mikephil.charting.charts.PieChart
+                        android:id="@+id/pieChart"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"></com.github.mikephil.charting.charts.PieChart>
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </androidx.core.widget.NestedScrollView>
+
+        <!-- NOTE: delete -->
+        <!--        <ListView-->
+        <!--            android:id="@+id/tasksList"-->
+        <!--            android:layout_width="match_parent"-->
+        <!--            android:layout_height="match_parent"-->
+        <!--            android:divider="@null"-->
+        <!--            android:dividerHeight="0dp"-->
+        <!--            android:padding="13dp"-->
+        <!--            android:scrollbars="none"></ListView>-->
 
     </LinearLayout>
-
-    <RelativeLayout
-        android:id="@+id/btnsContainer"
-        android:layout_width="wrap_content"
-        android:layout_height="160dp"
-        app:layout_constraintBottom_toBottomOf="@+id/homeContainer"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent">
-
-        <LinearLayout
-            android:id="@+id/btnsLayout"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="bottom|right"
-            android:orientation="vertical">
-
-            <Button
-                android:id="@+id/createBtn"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:layout_marginRight="15dp"
-                android:layout_marginBottom="15dp"
-                android:background="@drawable/create_button_radius_border"
-                android:onClick="createBtnClickHandler"
-                android:text="+"
-                android:textAlignment="center"
-                android:textSize="30sp"
-                android:textStyle="bold" />
-
-            <EditText
-                android:id="@+id/taskInput"
-                android:layout_width="match_parent"
-                android:layout_height="80dp"
-                android:background="@drawable/task_input_radius_border"
-                android:ems="10"
-                android:focusedByDefault="true"
-                android:hint="Type your task right here~"
-                android:inputType="textPersonName"
-                android:paddingStart="15dp"
-                android:paddingEnd="15dp"
-                android:paddingBottom="20dp"
-                android:textSize="18sp"
-                tools:visibility="visible" />
-
-        </LinearLayout>
-
-    </RelativeLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
