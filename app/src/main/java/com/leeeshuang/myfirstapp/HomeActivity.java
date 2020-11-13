@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,6 +20,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.github.mikephil.charting.charts.LineChart;
@@ -122,6 +124,7 @@ public class HomeActivity extends AppCompatActivity {
     private TextView dashboardButton;
     private TextView focusModeButton;
 
+    @RequiresApi(api = Build.VERSION_CODES.Q)
     @SuppressLint("CutPasteId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -141,7 +144,7 @@ public class HomeActivity extends AppCompatActivity {
         dashboardButton = findViewById(R.id.dashboardBtn);
         focusModeButton = findViewById(R.id.focusModeBtn);
 
-        drawCharts();
+        this.drawCharts();
     }
 
     @Override
@@ -207,6 +210,7 @@ public class HomeActivity extends AppCompatActivity {
         startActivityForResult(intent, 1);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.Q)
     private void initData(){
         // NOTE: 获取权限
         // Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
@@ -223,15 +227,13 @@ public class HomeActivity extends AppCompatActivity {
             lastUsedAt = System.currentTimeMillis() - 1000*3600*24*5;
         }
 
-        UsageStatsManager manager=(UsageStatsManager)getApplicationContext().getSystemService(USAGE_STATS_SERVICE);
-        Map<String, UsageStats> allUsageStats = manager.queryAndAggregateUsageStats(lastUsedAt, System.currentTimeMillis());
+        UsageStatsManager manager = (UsageStatsManager)getApplicationContext().getSystemService(USAGE_STATS_SERVICE);
+        List<UsageStats> usageStatsList = manager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, lastUsedAt, System.currentTimeMillis());
 
-        for (String i : allUsageStats.keySet()) {
-            UsageStats us = allUsageStats.get(i);
-            assert us != null;
-            if(us.getTotalTimeInForeground() != 0 && us.getLastTimeStamp() > lastUsedAt){
+        for(UsageStats us: usageStatsList){
+            if(us.getTotalTimeInForeground() != 0 && us.getFirstTimeStamp() > lastUsedAt){
                 long duration = us.getTotalTimeInForeground();
-                UsageLog ul = new UsageLog(us.getPackageName(), us.getLastTimeStamp(), duration);
+                UsageLog ul = new UsageLog(us.getPackageName(), us.getFirstTimeStamp(), duration);
                 DatabaseService.insert(ul);
                 usageLogs.add(ul);
             }
@@ -311,17 +313,17 @@ public class HomeActivity extends AppCompatActivity {
 
             allDuration += amount;
 
-            yLAxisValues.add((float)(amount / 1000 / 3600));
+            yLAxisValues.add((float)(amount / 1000 / 60));
         }
 
         yLAxisValues.add((float)(0));
 
         TextView allDurationTextView = findViewById(R.id.AllDataTitle);
         String allDurationText;
-        allDuration = allDuration / 1000 / 3600;
-        if(allDuration<60){
+        allDuration = allDuration / 1000 / 60;
+        if (allDuration < 60) {
             allDurationText = allDuration + " mins";
-        }else {
+        } else {
             allDurationText = allDuration /60 + " hrs " + allDuration%60 + " mins";
         }
 

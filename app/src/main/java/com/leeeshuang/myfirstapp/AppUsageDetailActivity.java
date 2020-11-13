@@ -139,9 +139,11 @@ public class AppUsageDetailActivity extends AppCompatActivity {
         appsAdapter = new AppLogListAdapter(this, appsDataArr);
         lv.setAdapter(appsAdapter);
 
-        List<UsageLog> list = DatabaseService.getByPackageName(packageName);
+        List<UsageLog> usageLogs = DatabaseService.getByPackageName(packageName);
 
-        for(UsageLog ul: list){
+        usageLogs.sort((u1, u2) -> (int) (u2.lastUsedAt - u1.lastUsedAt));
+
+        for(UsageLog ul: usageLogs){
             appsDataArr.add(new AppLogItem(ul.duration, ul.lastUsedAt));
         }
 
@@ -181,14 +183,14 @@ public class AppUsageDetailActivity extends AppCompatActivity {
 
             allDuration += amount;
 
-            yLAxisValues.add((float)(amount / 1000 / 3600));
+            yLAxisValues.add((float)(amount / 1000 / 60));
         }
 
         yLAxisValues.add((float)(0));
 
         TextView allDurationTextView = findViewById(R.id.duration);
         String allDurationText;
-        allDuration = allDuration / 1000 / 3600;
+        allDuration = allDuration / 1000 / 60;
         if(allDuration<60){
             allDurationText = allDuration + " mins";
         }else {
