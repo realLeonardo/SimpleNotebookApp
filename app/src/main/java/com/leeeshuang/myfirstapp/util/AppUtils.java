@@ -51,6 +51,24 @@ public class AppUtils {
         return temp.getTime();
     }
 
+    public static long get7DaysAgoTimestamp() {
+        LocalDateTime now = LocalDateTime.now();
+        int year = now.getYear();
+        int month = now.getMonthValue();
+        int day = now.getDayOfMonth();
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+
+        Date temp = null;
+        try {
+            temp = dateFormat.parse(year + "/" + month + "/" + day + " " + "00:00:00");
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        return temp.getTime() - 1000*3600*24*7;
+    }
+
     /**
      * 将double转为数值，并最多保留num位小数。例如当num为2时，1.268为1.27，1.2仍为1.2；1仍为1，而非1.00;100.00则返回100。
      *

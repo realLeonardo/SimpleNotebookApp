@@ -1,13 +1,16 @@
 package com.leeeshuang.myfirstapp.service;
 
+import android.app.usage.UsageStats;
 import android.content.Context;
 
 import androidx.room.Room;
 
 import com.leeeshuang.myfirstapp.model.UsageLog;
+import com.leeeshuang.myfirstapp.util.AppUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,8 +31,18 @@ public class DatabaseService {
         return db;
     }
 
-    public static void setData(List<UsageLog> usageLogss){
-        usageLogs = usageLogss;
+    public static void setData(List<UsageLog> uls){
+        List<UsageLog> usageLogsTemp = new ArrayList<>();
+
+        for(UsageLog p : uls) {
+            // NOTE: app filter
+            if(p.name.equals("com.leeeshuang.myfirstapp")){
+                continue;
+            }
+            usageLogsTemp.add(p.clone());
+        }
+
+        usageLogs = usageLogsTemp;
     }
 
     public static void insert(UsageLog usageLog){
@@ -44,11 +57,7 @@ public class DatabaseService {
         for(UsageLog t: list){
             String q = "" + (t.lastUsedAt - t.duration);
 
-                System.out.println("delete: " + t.id + " " + (usageLog.lastUsedAt - usageLog.duration) + " " + (usageLog.lastUsedAt - usageLog.duration));
-            System.out.println(s + " " + q);
-            System.out.println(s.equals(q));
             if(("" + (t.lastUsedAt - t.duration)).equals("" + (usageLog.lastUsedAt - usageLog.duration))){
-                System.out.println("delete: " + t.id);
                 db.usageLogDao().deleteById(t.id);
             }
         }
@@ -65,56 +74,86 @@ public class DatabaseService {
     }
 
     public static List<UsageLog> getFrom(long timeStamp, boolean notSame){
-        List<UsageLog> temp = usageLogs;
+        List<UsageLog> usageLogsTemp = new ArrayList<>();
 
-        temp = temp.stream()
+        for(UsageLog p : usageLogs) {
+            usageLogsTemp.add(p.clone());
+        }
+
+        usageLogsTemp = usageLogsTemp.stream()
                 .filter((UsageLog ul) -> ul.lastUsedAt >= timeStamp)
                 .collect(Collectors.toList());
 
         if(notSame){
-            Collections.sort(temp, (u1, u2) -> {
+            Collections.sort(usageLogsTemp, (u1, u2) -> {
                 return (int) (u1.lastUsedAt - u2.lastUsedAt);
             });
             HashMap<String, UsageLog> map = new HashMap<String, UsageLog>();
 
-            for (UsageLog ul: temp) {
+            for (UsageLog ul: usageLogsTemp) {
                 map.put(ul.name, ul);
             }
 
-            temp = new ArrayList(map.values());
+            usageLogsTemp = new ArrayList(map.values());
         }
 
-        return temp;
+        return usageLogsTemp;
     }
 
     public static List<UsageLog> getFromTo(long begin, long end){
-        List<UsageLog> temp = usageLogs;
+        List<UsageLog> usageLogsTemp = new ArrayList<>();
 
-        temp = temp.stream()
+        for(UsageLog p : usageLogs) {
+            usageLogsTemp.add(p.clone());
+        }
+
+        usageLogsTemp = usageLogsTemp.stream()
                 .filter((UsageLog ul) -> ul.lastUsedAt >= begin && ul.lastUsedAt <= end)
                 .collect(Collectors.toList());
 
-        return temp;
+        return usageLogsTemp;
+    }
+
+    public static List<UsageLog> getFromToWithHour(int begin, int end) {
+        List<UsageLog> usageLogsTemp = new ArrayList<>();
+
+        for(UsageLog p : usageLogs) {
+            usageLogsTemp.add(p.clone());
+        }
+
+        usageLogsTemp = usageLogsTemp.stream()
+                .filter((UsageLog ul) -> (new Date(ul.lastUsedAt)).getHours() >= begin && (new Date(ul.lastUsedAt)).getHours() <= end)
+                .collect(Collectors.toList());
+
+        return usageLogsTemp;
     }
 
     public static List<UsageLog> getByPackageName(String name){
-        List<UsageLog> temp = usageLogs;
+        List<UsageLog> usageLogsTemp = new ArrayList<>();
 
-        temp = temp.stream()
+        for(UsageLog p : usageLogs) {
+            usageLogsTemp.add(p.clone());
+        }
+
+        usageLogsTemp = usageLogsTemp.stream()
                 .filter((UsageLog ul) -> ul.name.equals(name))
                 .collect(Collectors.toList());
 
-        return temp;
+        return usageLogsTemp;
     }
 
     public static List<UsageLog> getFromToAndName(long begin, long end, String name){
-        List<UsageLog> temp = usageLogs;
+        List<UsageLog> usageLogsTemp = new ArrayList<>();
 
-        temp = temp.stream()
+        for(UsageLog p : usageLogs) {
+            usageLogsTemp.add(p.clone());
+        }
+
+        usageLogsTemp = usageLogsTemp.stream()
                 .filter((UsageLog ul) -> ul.lastUsedAt >= begin && ul.lastUsedAt <= end && ul.name.equals(name))
                 .collect(Collectors.toList());
 
-        return temp;
+        return usageLogsTemp;
     }
 }
 

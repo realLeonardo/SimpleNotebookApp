@@ -64,7 +64,6 @@ class AppItem {
 }
 
 class AppListAdapter extends BaseAdapter {
-
     Context context;
     ArrayList<AppItem> data;
     private static LayoutInflater inflater = null;
@@ -121,8 +120,9 @@ public class HomeActivity extends AppCompatActivity {
     private final ArrayList<AppItem> appsDataArr = new ArrayList<>();
 
     private View dashboardContainer;
+    private View overviewContainer;
     private TextView dashboardButton;
-    private TextView focusModeButton;
+    private TextView overviewButton;
 
     @RequiresApi(api = Build.VERSION_CODES.Q)
     @SuppressLint("CutPasteId")
@@ -132,6 +132,7 @@ public class HomeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_home);
 
         dashboardContainer = findViewById(R.id.dashboardContainer);
+        overviewContainer = findViewById(R.id.overviewContainer);
         ScrollListView appListContainer = findViewById(R.id.appList);
 
         AppListAdapter appsAdapter = new AppListAdapter(this, appsDataArr);
@@ -143,9 +144,11 @@ public class HomeActivity extends AppCompatActivity {
         this.drawAppList();
 
         dashboardButton = findViewById(R.id.dashboardBtn);
-        focusModeButton = findViewById(R.id.focusModeBtn);
+        overviewButton = findViewById(R.id.overviewBtn);
 
         this.drawCharts();
+
+        this.initOverviewData();
     }
 
     @Override
@@ -168,7 +171,6 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
-
     @SuppressLint("ResourceAsColor")
     public void showDashboardContainer(View view) {
         if (shownStatus == 0) {
@@ -177,8 +179,9 @@ public class HomeActivity extends AppCompatActivity {
 
         shownStatus = 0;
         dashboardButton.setTextColor(getColor(R.color.black));
-        focusModeButton.setTextColor(getColor(R.color.primary));
+        overviewButton.setTextColor(getColor(R.color.primary));
 
+        overviewContainer.setVisibility(View.GONE);
         dashboardContainer.setAlpha(0f);
         dashboardContainer.setVisibility(View.VISIBLE);
         int ANIMATE_DURATION = 300;
@@ -189,16 +192,23 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     @SuppressLint("ResourceAsColor")
-    public void showFocusModeContainer(View view) {
+    public void showOverviewContainer(View view) {
         if(shownStatus == 1) {
             return;
         }
 
         shownStatus = 1;
-        focusModeButton.setTextColor(getColor(R.color.black));
+        overviewButton.setTextColor(getColor(R.color.black));
         dashboardButton.setTextColor(getColor(R.color.primary));
 
         dashboardContainer.setVisibility(View.GONE);
+        overviewContainer.setAlpha(0f);
+        overviewContainer.setVisibility(View.VISIBLE);
+        int ANIMATE_DURATION = 300;
+        overviewContainer.animate()
+                .alpha(1f)
+                .setDuration(ANIMATE_DURATION)
+                .setListener(null);
     }
 
     public void appDetailBtnClickHandler(View view) {
@@ -214,16 +224,16 @@ public class HomeActivity extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.Q)
     private void initData(){
         // NOTE: 获取权限
-        // Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
-        // startActivity(intent);
+//         Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
+//         startActivity(intent);
 
-        List<UsageLog> usageLogs = new ArrayList<UsageLog>();
+        List<UsageLog> usageLogs = new ArrayList<>();
 
         UsageStatsManager manager = (UsageStatsManager)getApplicationContext().getSystemService(USAGE_STATS_SERVICE);
-        List<UsageStats> usageStatsList = manager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, AppUtils.getDayTimestamp(), System.currentTimeMillis());
+        List<UsageStats> usageStatsList = manager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, AppUtils.get7DaysAgoTimestamp(), System.currentTimeMillis());
 
         usageStatsList = usageStatsList.stream()
-                .filter((UsageStats us) -> us.getTotalTimeInForeground() != 0 && us.getLastTimeVisible() >= AppUtils.getDayTimestamp())
+                .filter((UsageStats us) -> us.getTotalTimeInForeground() != 0 && !us.getPackageName().equals("com.leeeshuang.myfirstapp"))
                 .collect(Collectors.toList());
 
         for(UsageStats us: usageStatsList){
@@ -237,48 +247,43 @@ public class HomeActivity extends AppCompatActivity {
 
     private void drawAppList() {
         List<UsageLog> usageLogs = DatabaseService.getFrom(AppUtils.getDayTimestamp(), false);
-        List<UsageLog> usageLogsTemp = new ArrayList<>();
-
-        for(UsageLog p : usageLogs) {
-            usageLogsTemp.add(p.clone());
-        }
 
         PackageManager pm = getApplicationContext().getPackageManager();
         HashMap<String, Long> durationMap = new HashMap<>();
 
-        for(UsageLog ul: usageLogsTemp) {
+        for(UsageLog ul: usageLogs) {
             String name = ul.name;
             long duration = durationMap.containsKey(name) ? durationMap.get(name) : 0;
             durationMap.put(name, duration + ul.duration);
         }
 
-        usageLogsTemp.sort((u1, u2) -> {
+        usageLogs.sort((u1, u2) -> {
             return (int) (u1.lastUsedAt - u2.lastUsedAt);
         });
 
         HashMap<String, UsageLog> map = new HashMap<String, UsageLog>();
 
-        for (UsageLog ul: usageLogsTemp) {
+        for (UsageLog ul: usageLogs) {
             map.put(ul.name, ul);
         }
 
-        usageLogsTemp = new ArrayList(map.values());
+        usageLogs = new ArrayList(map.values());
 
-        for(UsageLog ul: usageLogsTemp) {
+        for(UsageLog ul: usageLogs) {
             if(durationMap.containsKey(ul.name)){
                 ul.duration = durationMap.get(ul.name);
             }
         }
 
-        usageLogsTemp = usageLogsTemp.stream()
+        usageLogs = usageLogs.stream()
                 .filter((UsageLog ul) -> ul.duration >= 1000*10)
                 .collect(Collectors.toList());
-        usageLogsTemp.sort((u1, u2) -> (int) (u2.duration - u1.duration));
+        usageLogs.sort((u1, u2) -> (int) (u2.duration - u1.duration));
 
         long count = 0;
 
         // NOTE: display app list
-        for(UsageLog ul: usageLogsTemp) {
+        for(UsageLog ul: usageLogs) {
             try {
                 ApplicationInfo appInfo = this.getPackageManager().getApplicationInfo(ul.name, 0);
 
@@ -399,4 +404,168 @@ public class HomeActivity extends AppCompatActivity {
         MPChartHelper.setPieChart(pieChart, pieValues,"",true);
     }
 
+    private void initOverviewData() {
+        this.initUsageRanking();
+        this.initUsageDurationRanking();
+    }
+
+    private void initUsageRanking() {
+        List<UsageLog> usageLogs = DatabaseService.getAll();
+
+        PackageManager pm = getApplicationContext().getPackageManager();
+        HashMap<String, Long> durationMap = new HashMap<>();
+
+        for(UsageLog ul: usageLogs) {
+            String name = ul.name;
+            long duration = durationMap.containsKey(name) ? durationMap.get(name) : 0;
+            durationMap.put(name, duration + ul.duration);
+        }
+
+        usageLogs.sort((u1, u2) -> {
+            return (int) (u1.lastUsedAt - u2.lastUsedAt);
+        });
+
+        HashMap<String, UsageLog> map = new HashMap<String, UsageLog>();
+
+        for (UsageLog ul: usageLogs) {
+            map.put(ul.name, ul);
+        }
+
+        usageLogs = new ArrayList(map.values());
+
+        for(UsageLog ul: usageLogs) {
+            if(durationMap.containsKey(ul.name)){
+                ul.duration = durationMap.get(ul.name);
+            }
+        }
+
+        usageLogs = usageLogs.stream()
+                .filter((UsageLog ul) -> ul.duration >= 1000*10 && !ul.name.equals("com.leeeshuang.myfirstapp"))
+                .collect(Collectors.toList());
+        usageLogs.sort((u1, u2) -> (int) (u2.duration - u1.duration));
+
+        int count = 1;
+        // NOTE: display app list
+        for(UsageLog ul: usageLogs) {
+            try {
+                ApplicationInfo appInfo = this.getPackageManager().getApplicationInfo(ul.name, 0);
+
+                Drawable icon = pm.getApplicationIcon(appInfo);
+                String name = (String) pm.getApplicationLabel(appInfo);
+                
+                LinearLayout container = findViewById(R.id.no1usedApp);
+                switch (count) {
+                    case 2: {
+                        container = findViewById(R.id.no2usedApp);
+                        break;
+                    }
+                    case 3: {
+                        container = findViewById(R.id.no3usedApp);
+                        break;
+                    }
+                }
+
+                ImageView appIcon = container.findViewById(R.id.appIcon);
+                TextView appName = container.findViewById(R.id.appName);
+                TextView appDuration = container.findViewById(R.id.appDuration);
+
+                appIcon.setImageDrawable(icon);
+                appName.setText(name);
+
+                int dayCount = (int) (ul.duration / 1000 / 3600 / 24);
+                int hourCount = (int) (ul.duration / 1000 / 3600 % 24);
+                int minCount = (int) (ul.duration / 1000 / 60 % 60);
+
+                String durationText = (dayCount>0?dayCount+" days ":"") + (hourCount>0?hourCount+" hrs ":"") + (minCount>0?minCount+" mins":"");
+
+                if (count == 1) {
+                    durationText = "It have run " + durationText + "!";
+
+                    TextView openItBtn = container.findViewById(R.id.openItBtn);
+
+                    openItBtn.setOnClickListener(v -> {
+                        Intent launchIntent = getPackageManager().getLaunchIntentForPackage(ul.name);
+
+                        if (launchIntent != null) {
+                            startActivity(launchIntent);
+                        }
+                    });
+                }
+                appDuration.setText(durationText);
+            } catch (PackageManager.NameNotFoundException e) {
+                // e.printStackTrace();
+            }
+
+            count++;
+            if(count > 3){
+                break;
+            }
+        }
+    }
+
+    private void initUsageDurationRanking() {
+        List<UsageLog> usageLogs = DatabaseService.getAll();
+        HashMap<String, Long> durationMap = new HashMap<>();
+
+        for(UsageLog ul: usageLogs) {
+            String name = ul.name;
+            long duration = durationMap.containsKey(name) ? durationMap.get(name) : 0;
+            durationMap.put(name, duration + ul.duration);
+        }
+
+        usageLogs.sort((u1, u2) -> (int) (u1.lastUsedAt - u2.lastUsedAt));
+
+        List<Integer> hoursList = new ArrayList<>();
+        hoursList.add(0);
+        hoursList.add(3);
+        hoursList.add(6);
+        hoursList.add(9);
+        hoursList.add(12);
+        hoursList.add(15);
+        hoursList.add(18);
+        hoursList.add(21);
+        hoursList.add(24);
+
+        List<Long> durationList = new ArrayList<>();
+
+        for(int count = 0; count<hoursList.size()-1; count++){
+            List<UsageLog> usageLogsTemp = DatabaseService.getFromToWithHour(hoursList.get(count), hoursList.get(count+1));
+
+            long amount = 0;
+            for(UsageLog us: usageLogsTemp){
+                amount+=us.duration;
+            }
+
+            durationList.add(amount);
+        }
+
+        int maxIndex = 0;
+        long maxValue = 0;
+        for(int index = 0; index<durationList.size(); index++){
+            if(durationList.get(index) > maxValue){
+                maxIndex = index;
+            }
+        }
+
+        String words;
+        String suggestion;
+
+        if(maxIndex > durationList.size() - 1){
+            words = "23:00 - 01:00";
+        } else {
+            words = hoursList.get(maxIndex) + ":00 - " + hoursList.get(maxIndex + 1) + ":00";
+        }
+
+        if (hoursList.get(maxIndex) >= 9 && hoursList.get(maxIndex) <= 21) {
+            suggestion = "Not bad, please keep it up";
+        } else {
+            suggestion = "Bad habit, please change it quickly";
+        }
+
+        TextView maxWordsEl = findViewById(R.id.maxDurationText);
+        TextView suggestionEl = findViewById(R.id.suggestionText);
+
+        maxWordsEl.setText(words);
+        suggestionEl.setText(suggestion);
+    }
 }
