@@ -139,7 +139,7 @@ public class HomeActivity extends AppCompatActivity {
         appListContainer.setAdapter(appsAdapter);
 
         // NOTE: initialize room db
-        DatabaseService.create(getApplicationContext());
+        // DatabaseService.create(getApplicationContext());
         this.initData();
         this.drawAppList();
 
@@ -246,7 +246,7 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void drawAppList() {
-        List<UsageLog> usageLogs = DatabaseService.getFrom(AppUtils.getDayTimestamp(), false);
+        List<UsageLog> usageLogs = DatabaseService.getFrom(AppUtils.getDayTimestamp());
 
         PackageManager pm = getApplicationContext().getPackageManager();
         HashMap<String, Long> durationMap = new HashMap<>();
@@ -371,7 +371,7 @@ public class HomeActivity extends AppCompatActivity {
     private void drawPieChart() {
         PieChart pieChart = findViewById(R.id.pieChart);
 
-        List<UsageLog> usageLogs = DatabaseService.getFrom(AppUtils.getDayTimestamp(), false);
+        List<UsageLog> usageLogs = DatabaseService.getFrom(AppUtils.getDayTimestamp());
         PackageManager pm = getApplicationContext().getPackageManager();
         HashMap<String, Integer> map = new HashMap<>();
 
@@ -410,7 +410,7 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void initUsageRanking() {
-        List<UsageLog> usageLogs = DatabaseService.getAll();
+        List<UsageLog> usageLogs = DatabaseService.getData();
 
         PackageManager pm = getApplicationContext().getPackageManager();
         HashMap<String, Long> durationMap = new HashMap<>();
@@ -504,14 +504,29 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void initUsageDurationRanking() {
-        List<UsageLog> usageLogs = DatabaseService.getAll();
+        List<UsageLog> usageLogs = DatabaseService.getData();
         HashMap<String, Long> durationMap = new HashMap<>();
+
+        long allAmount = 0;
 
         for(UsageLog ul: usageLogs) {
             String name = ul.name;
             long duration = durationMap.containsKey(name) ? durationMap.get(name) : 0;
             durationMap.put(name, duration + ul.duration);
+            allAmount += ul.duration;
         }
+
+        String allDurationText = "";
+        allAmount = allAmount / 1000 / 60;
+
+        if (allAmount < 60) {
+            allDurationText = allAmount + " mins";
+        } else {
+            allDurationText = allAmount / 60 % 24 + " hrs " + allAmount % 60 + " mins";
+        }
+
+        TextView dailyUsageText = findViewById(R.id.dailyUsageText);
+        dailyUsageText.setText(allDurationText);
 
         usageLogs.sort((u1, u2) -> (int) (u1.lastUsedAt - u2.lastUsedAt));
 

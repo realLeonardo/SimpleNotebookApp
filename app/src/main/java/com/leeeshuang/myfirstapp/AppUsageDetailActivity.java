@@ -107,12 +107,10 @@ public class AppUsageDetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_app_usage_detail);
 
         Intent intent = getIntent();
-
-        // Default value is -1, means from create button
         packageName = intent.getStringExtra("PACKAGE_NAME");
 
         PackageManager pm = getApplicationContext().getPackageManager();
-        // NOTE: display app list
+
         try {
             ApplicationInfo appInfo = this.getPackageManager().getApplicationInfo(packageName, 0);
             Drawable icon = pm.getApplicationIcon(appInfo);
@@ -123,7 +121,6 @@ public class AppUsageDetailActivity extends AppCompatActivity {
 
             appNameEl.setText(name);
             iconEl.setImageDrawable(icon);
-
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }
@@ -196,10 +193,10 @@ public class AppUsageDetailActivity extends AppCompatActivity {
         TextView allDurationTextView = findViewById(R.id.duration);
         String allDurationText;
         allDuration = allDuration / 1000 / 60;
-        if(allDuration<60){
+        if (allDuration < 60) {
             allDurationText = allDuration + " mins";
-        }else {
-            allDurationText = allDuration /60 + " hrs " + allDuration%60 + " mins";
+        } else {
+            allDurationText = allDuration / 60 + " hrs " + allDuration % 60 + " mins";
         }
 
         allDurationTextView.setText(allDurationText);

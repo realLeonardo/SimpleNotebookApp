@@ -63,17 +63,21 @@ public class DatabaseService {
         }
     }
 
-    public static List<UsageLog> getAll(){
-        usageLogs = db.usageLogDao().getAll();
+    public static List<UsageLog> getData() {
+        List<UsageLog> usageLogsTemp = new ArrayList<>();
 
-        return usageLogs;
+        for(UsageLog p : usageLogs) {
+            usageLogsTemp.add(p.clone());
+        }
+
+        return usageLogsTemp;
     }
 
     public static void clearAll(){
         db.usageLogDao().clearAll();
     }
 
-    public static List<UsageLog> getFrom(long timeStamp, boolean notSame){
+    public static List<UsageLog> getFrom(long timeStamp){
         List<UsageLog> usageLogsTemp = new ArrayList<>();
 
         for(UsageLog p : usageLogs) {
@@ -83,19 +87,6 @@ public class DatabaseService {
         usageLogsTemp = usageLogsTemp.stream()
                 .filter((UsageLog ul) -> ul.lastUsedAt >= timeStamp)
                 .collect(Collectors.toList());
-
-        if(notSame){
-            Collections.sort(usageLogsTemp, (u1, u2) -> {
-                return (int) (u1.lastUsedAt - u2.lastUsedAt);
-            });
-            HashMap<String, UsageLog> map = new HashMap<String, UsageLog>();
-
-            for (UsageLog ul: usageLogsTemp) {
-                map.put(ul.name, ul);
-            }
-
-            usageLogsTemp = new ArrayList(map.values());
-        }
 
         return usageLogsTemp;
     }
