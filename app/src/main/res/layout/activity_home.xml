@@ -73,7 +73,7 @@
             android:layout_height="match_parent"
             android:fillViewport="true"
             android:scrollbarSize="0dp"
-            android:visibility="gone">
+            android:visibility="visible">
 
             <LinearLayout
                 android:id="@+id/Dashboard"
@@ -215,7 +215,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scrollbarSize="0dp"
-            android:visibility="visible">
+            android:visibility="gone">
 
             <LinearLayout
                 android:layout_width="match_parent"
