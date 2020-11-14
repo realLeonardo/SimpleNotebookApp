@@ -23,4 +23,10 @@ public class UsageLog {
         this.lastUsedAt = lastUsedAt;
         this.duration = duration;
     }
+
+    public UsageLog clone(){
+        UsageLog ul = new UsageLog(this.name, this.lastUsedAt ,this.duration);
+
+        return ul;
+    }
 }

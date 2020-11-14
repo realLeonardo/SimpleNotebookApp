@@ -13,17 +13,11 @@ public interface UsageLogDao {
     @Query("SELECT * FROM usagelogs")
     List<UsageLog> getAll();
 
-    @Query("SELECT * FROM usagelogs WHERE id IN (:userIds)")
-    List<UsageLog> loadAllByIds(int[] userIds);
-
-//    @Query("SELECT * FROM usagelogs WHERE name LIKE :first")
-//    UsageLog findByName(String first, String last);
-
     @Query("DELETE FROM usagelogs")
-    public void clearAll();
+    void clearAll();
 
-    @Insert
-    void insertAll(UsageLog... usageLogs);
+    @Query("DELETE FROM usagelogs WHERE id=(:id)")
+    void deleteById(int id);
 
     @Insert
     void insert(UsageLog usageLog);

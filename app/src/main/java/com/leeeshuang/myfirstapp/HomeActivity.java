@@ -140,6 +140,7 @@ public class HomeActivity extends AppCompatActivity {
         // NOTE: initialize room db
         DatabaseService.create(getApplicationContext());
         this.initData();
+        this.drawAppList();
 
         dashboardButton = findViewById(R.id.dashboardBtn);
         focusModeButton = findViewById(R.id.focusModeBtn);
@@ -216,42 +217,68 @@ public class HomeActivity extends AppCompatActivity {
         // Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
         // startActivity(intent);
 
-        List<UsageLog> usageLogs =  DatabaseService.getAll();
-
-        long lastUsedAt;
-
-        if(usageLogs.size() != 0){
-            lastUsedAt = usageLogs.get(usageLogs.size()-1).lastUsedAt;
-        } else {
-            // NOTE: 5 days ago
-            lastUsedAt = System.currentTimeMillis() - 1000*3600*24*5;
-        }
+        List<UsageLog> usageLogs = new ArrayList<UsageLog>();
 
         UsageStatsManager manager = (UsageStatsManager)getApplicationContext().getSystemService(USAGE_STATS_SERVICE);
-        List<UsageStats> usageStatsList = manager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, lastUsedAt, System.currentTimeMillis());
+        List<UsageStats> usageStatsList = manager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, AppUtils.getDayTimestamp(), System.currentTimeMillis());
+
+        usageStatsList = usageStatsList.stream()
+                .filter((UsageStats us) -> us.getTotalTimeInForeground() != 0 && us.getLastTimeVisible() >= AppUtils.getDayTimestamp())
+                .collect(Collectors.toList());
 
         for(UsageStats us: usageStatsList){
-            if(us.getTotalTimeInForeground() != 0 && us.getFirstTimeStamp() > lastUsedAt){
-                long duration = us.getTotalTimeInForeground();
-                UsageLog ul = new UsageLog(us.getPackageName(), us.getFirstTimeStamp(), duration);
-                DatabaseService.insert(ul);
-                usageLogs.add(ul);
+            long duration = us.getTotalTimeInForeground();
+            UsageLog ul = new UsageLog(us.getPackageName(), us.getLastTimeVisible(), duration);
+            usageLogs.add(ul);
+        }
+
+        DatabaseService.setData(usageLogs);
+    }
+
+    private void drawAppList() {
+        List<UsageLog> usageLogs = DatabaseService.getFrom(AppUtils.getDayTimestamp(), false);
+        List<UsageLog> usageLogsTemp = new ArrayList<>();
+
+        for(UsageLog p : usageLogs) {
+            usageLogsTemp.add(p.clone());
+        }
+
+        PackageManager pm = getApplicationContext().getPackageManager();
+        HashMap<String, Long> durationMap = new HashMap<>();
+
+        for(UsageLog ul: usageLogsTemp) {
+            String name = ul.name;
+            long duration = durationMap.containsKey(name) ? durationMap.get(name) : 0;
+            durationMap.put(name, duration + ul.duration);
+        }
+
+        usageLogsTemp.sort((u1, u2) -> {
+            return (int) (u1.lastUsedAt - u2.lastUsedAt);
+        });
+
+        HashMap<String, UsageLog> map = new HashMap<String, UsageLog>();
+
+        for (UsageLog ul: usageLogsTemp) {
+            map.put(ul.name, ul);
+        }
+
+        usageLogsTemp = new ArrayList(map.values());
+
+        for(UsageLog ul: usageLogsTemp) {
+            if(durationMap.containsKey(ul.name)){
+                ul.duration = durationMap.get(ul.name);
             }
         }
 
-        DatabaseService.usageLogs = usageLogs;
-        usageLogs = DatabaseService.getFrom(AppUtils.getDayTimestamp(), true);
-
-        // NOTE: Data handler
-        usageLogs = usageLogs.stream()
+        usageLogsTemp = usageLogsTemp.stream()
                 .filter((UsageLog ul) -> ul.duration >= 1000*10)
                 .collect(Collectors.toList());
-        usageLogs.sort((u1, u2) -> (int) (u2.duration - u1.duration));
-        PackageManager pm = getApplicationContext().getPackageManager();
+        usageLogsTemp.sort((u1, u2) -> (int) (u2.duration - u1.duration));
+
         long count = 0;
 
         // NOTE: display app list
-        for(UsageLog ul: usageLogs) {
+        for(UsageLog ul: usageLogsTemp) {
             try {
                 ApplicationInfo appInfo = this.getPackageManager().getApplicationInfo(ul.name, 0);
 

@@ -28,18 +28,34 @@ public class DatabaseService {
         return db;
     }
 
+    public static void setData(List<UsageLog> usageLogss){
+        usageLogs = usageLogss;
+    }
+
     public static void insert(UsageLog usageLog){
+        deleteSame(usageLog);
         db.usageLogDao().insert(usageLog);
     }
 
-    public static void insertAll(UsageLog... usageLogs){
-        db.usageLogDao().insertAll(usageLogs);
+    public static void deleteSame(UsageLog usageLog) {
+        List<UsageLog> list = getByPackageName(usageLog.name);
+
+        String s = "" + (usageLog.lastUsedAt - usageLog.duration);
+        for(UsageLog t: list){
+            String q = "" + (t.lastUsedAt - t.duration);
+
+                System.out.println("delete: " + t.id + " " + (usageLog.lastUsedAt - usageLog.duration) + " " + (usageLog.lastUsedAt - usageLog.duration));
+            System.out.println(s + " " + q);
+            System.out.println(s.equals(q));
+            if(("" + (t.lastUsedAt - t.duration)).equals("" + (usageLog.lastUsedAt - usageLog.duration))){
+                System.out.println("delete: " + t.id);
+                db.usageLogDao().deleteById(t.id);
+            }
+        }
     }
 
     public static List<UsageLog> getAll(){
-        if(usageLogs == null){
-            usageLogs = db.usageLogDao().getAll();
-        }
+        usageLogs = db.usageLogDao().getAll();
 
         return usageLogs;
     }
