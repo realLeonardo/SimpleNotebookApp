@@ -479,7 +479,7 @@ public class HomeActivity extends AppCompatActivity {
                 String durationText = (dayCount>0?dayCount+" days ":"") + (hourCount>0?hourCount+" hrs ":"") + (minCount>0?minCount+" mins":"");
 
                 if (count == 1) {
-                    durationText = "It have run " + durationText + "!";
+                    durationText = "Has been running for " + durationText + "!";
 
                     TextView openItBtn = container.findViewById(R.id.openItBtn);
 

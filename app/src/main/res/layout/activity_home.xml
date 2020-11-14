@@ -229,6 +229,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="10dp"
+                    android:fontFamily="sans-serif-light"
                     android:paddingLeft="10dp"
                     android:text="In the past week,"
                     android:textColor="@color/black"
@@ -245,9 +246,9 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="15dp"
                         android:paddingStart="10dp"
-                        android:text="you always use these apps:"
+                        android:text="you often use these apps:"
                         android:textColor="@color/black"
-                        android:textSize="20sp" />
+                        android:textSize="22sp" />
 
                     <LinearLayout
                         android:id="@+id/no1usedApp"
@@ -297,12 +298,13 @@
                             android:id="@+id/appDuration"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:layout_marginBottom="5dp"
                             android:paddingLeft="40dp"
                             android:paddingTop="5dp"
                             android:paddingBottom="5dp"
                             android:text="TextView"
                             android:textColor="@color/black"
-                            android:textSize="18sp" />
+                            android:textSize="16sp" />
 
                         <TextView
                             android:id="@+id/openItBtn"

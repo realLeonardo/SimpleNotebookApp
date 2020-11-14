@@ -27,6 +27,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 class AppLogItem {
     public long duration;
@@ -140,6 +141,10 @@ public class AppUsageDetailActivity extends AppCompatActivity {
         lv.setAdapter(appsAdapter);
 
         List<UsageLog> usageLogs = DatabaseService.getByPackageName(packageName);
+
+        usageLogs = usageLogs.stream()
+                .filter((UsageLog ul) -> ul.lastUsedAt >= AppUtils.getDayTimestamp())
+                .collect(Collectors.toList());
 
         usageLogs.sort((u1, u2) -> (int) (u2.lastUsedAt - u1.lastUsedAt));
 
