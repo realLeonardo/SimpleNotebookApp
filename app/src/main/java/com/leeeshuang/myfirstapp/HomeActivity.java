@@ -404,13 +404,28 @@ public class HomeActivity extends AppCompatActivity {
         MPChartHelper.setPieChart(pieChart, pieValues,"",true);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.Q)
     private void initOverviewData() {
         this.initUsageRanking();
         this.initUsageDurationRanking();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.Q)
     private void initUsageRanking() {
-        List<UsageLog> usageLogs = DatabaseService.getData();
+        UsageStatsManager manager = (UsageStatsManager)getApplicationContext().getSystemService(USAGE_STATS_SERVICE);
+        List<UsageLog> usageLogs = new ArrayList<>();
+
+        List<UsageStats> usageStatsList = manager.queryUsageStats(UsageStatsManager.INTERVAL_WEEKLY, AppUtils.get7DaysAgoTimestamp(), System.currentTimeMillis());
+
+        usageStatsList = usageStatsList.stream()
+                .filter((UsageStats us) -> us.getTotalTimeInForeground() != 0 && !us.getPackageName().equals("com.leeeshuang.myfirstapp"))
+                .collect(Collectors.toList());
+
+        for(UsageStats us: usageStatsList){
+            long duration = us.getTotalTimeInForeground();
+            UsageLog ul = new UsageLog(us.getPackageName(), us.getLastTimeVisible(), duration);
+            usageLogs.add(ul);
+        }
 
         PackageManager pm = getApplicationContext().getPackageManager();
         HashMap<String, Long> durationMap = new HashMap<>();
@@ -503,8 +518,23 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.Q)
     private void initUsageDurationRanking() {
-        List<UsageLog> usageLogs = DatabaseService.getData();
+        UsageStatsManager manager = (UsageStatsManager)getApplicationContext().getSystemService(USAGE_STATS_SERVICE);
+        List<UsageLog> usageLogs = new ArrayList<>();
+
+        List<UsageStats> usageStatsList = manager.queryUsageStats(UsageStatsManager.INTERVAL_WEEKLY, AppUtils.get7DaysAgoTimestamp(), System.currentTimeMillis());
+
+        usageStatsList = usageStatsList.stream()
+                .filter((UsageStats us) -> us.getTotalTimeInForeground() != 0 && !us.getPackageName().equals("com.leeeshuang.myfirstapp"))
+                .collect(Collectors.toList());
+
+        for(UsageStats us: usageStatsList){
+            long duration = us.getTotalTimeInForeground();
+            UsageLog ul = new UsageLog(us.getPackageName(), us.getLastTimeVisible(), duration);
+            usageLogs.add(ul);
+        }
+
         HashMap<String, Long> durationMap = new HashMap<>();
 
         long allAmount = 0;
@@ -517,7 +547,7 @@ public class HomeActivity extends AppCompatActivity {
         }
 
         String allDurationText = "";
-        allAmount = allAmount / 1000 / 60;
+        allAmount = allAmount / 1000 / 60 / 7;
 
         if (allAmount < 60) {
             allDurationText = allAmount + " mins";

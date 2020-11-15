@@ -233,7 +233,7 @@
                     android:paddingLeft="10dp"
                     android:text="In the past week,"
                     android:textColor="@color/black"
-                    android:textSize="20sp" />
+                    android:textSize="16sp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -248,7 +248,7 @@
                         android:paddingStart="10dp"
                         android:text="Most Used APP Ranking:"
                         android:textColor="@color/black"
-                        android:textSize="28sp" />
+                        android:textSize="26sp" />
 
                     <LinearLayout
                         android:id="@+id/no1usedApp"
@@ -308,10 +308,16 @@
 
                         <TextView
                             android:id="@+id/openItBtn"
-                            android:layout_width="match_parent"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:paddingLeft="40dp"
-                            android:text="Open it !" />
+                            android:layout_marginLeft="40dp"
+                            android:background="@drawable/create_button_radius_border"
+                            android:backgroundTint="#E56565"
+                            android:padding="5dp"
+                            android:paddingStart="10dp"
+                            android:paddingEnd="10dp"
+                            android:text="Open it !"
+                            android:textColor="@color/white" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -425,14 +431,17 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
+                        android:layout_marginBottom="10dp"
                         android:orientation="vertical">
 
                         <TextView
                             android:id="@+id/textView4"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:fontFamily="sans-serif-light"
                             android:text="Average daily usage time:"
-                            android:textColor="@color/black" />
+                            android:textColor="@color/black"
+                            android:textSize="16sp" />
 
                         <TextView
                             android:id="@+id/dailyUsageText"
@@ -442,7 +451,7 @@
                             android:layout_marginBottom="5dp"
                             android:text="TextView"
                             android:textColor="@color/black"
-                            android:textSize="26sp"
+                            android:textSize="28sp"
                             android:textStyle="bold" />
                     </LinearLayout>
 
@@ -456,8 +465,10 @@
                             android:id="@+id/textView5"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:fontFamily="sans-serif-light"
                             android:text="Always use in: "
-                            android:textColor="@color/black" />
+                            android:textColor="@color/black"
+                            android:textSize="16sp" />
 
                         <TextView
                             android:id="@+id/maxDurationText"
@@ -467,7 +478,7 @@
                             android:layout_weight="1"
                             android:text="TextView"
                             android:textColor="@color/black"
-                            android:textSize="26sp"
+                            android:textSize="28sp"
                             android:textStyle="bold" />
                     </LinearLayout>
 
@@ -475,7 +486,7 @@
                         android:id="@+id/suggestionText"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="20dp"
+                        android:layout_marginTop="10dp"
                         android:text="TextView"
                         android:textColor="@color/black"
                         android:textSize="20sp" />
@@ -484,7 +495,7 @@
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="80dp"
+                    android:layout_height="70dp"
                     android:layout_weight="1"
                     android:gravity="bottom|center"
                     android:orientation="vertical">
