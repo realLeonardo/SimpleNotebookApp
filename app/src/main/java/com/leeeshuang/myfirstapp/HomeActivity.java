@@ -142,11 +142,10 @@ public class HomeActivity extends AppCompatActivity {
         // DatabaseService.create(getApplicationContext());
         this.initData();
         this.drawAppList();
+        this.drawCharts();
 
         dashboardButton = findViewById(R.id.dashboardBtn);
         overviewButton = findViewById(R.id.overviewBtn);
-
-        this.drawCharts();
 
         this.initOverviewData();
     }
