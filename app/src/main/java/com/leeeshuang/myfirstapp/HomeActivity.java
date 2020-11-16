@@ -229,13 +229,13 @@ public class HomeActivity extends AppCompatActivity {
         List<UsageLog> usageLogs = new ArrayList<>();
 
         UsageStatsManager manager = (UsageStatsManager)getApplicationContext().getSystemService(USAGE_STATS_SERVICE);
-        List<UsageStats> usageStatsList = manager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, AppUtils.get7DaysAgoTimestamp(), System.currentTimeMillis());
+        List<UsageStats> usageStatsList = manager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, AppUtils.getDayTimestamp(), System.currentTimeMillis());
 
         usageStatsList = usageStatsList.stream()
                 .filter((UsageStats us) -> us.getTotalTimeInForeground() != 0 && !us.getPackageName().equals("com.leeeshuang.myfirstapp"))
                 .collect(Collectors.toList());
 
-        for(UsageStats us: usageStatsList){
+        for (UsageStats us: usageStatsList) {
             long duration = us.getTotalTimeInForeground();
             UsageLog ul = new UsageLog(us.getPackageName(), us.getLastTimeVisible(), duration);
             usageLogs.add(ul);
@@ -256,11 +256,7 @@ public class HomeActivity extends AppCompatActivity {
             durationMap.put(name, duration + ul.duration);
         }
 
-        usageLogs.sort((u1, u2) -> {
-            return (int) (u1.lastUsedAt - u2.lastUsedAt);
-        });
-
-        HashMap<String, UsageLog> map = new HashMap<String, UsageLog>();
+        HashMap<String, UsageLog> map = new HashMap<>();
 
         for (UsageLog ul: usageLogs) {
             map.put(ul.name, ul);
@@ -274,9 +270,6 @@ public class HomeActivity extends AppCompatActivity {
             }
         }
 
-        usageLogs = usageLogs.stream()
-                .filter((UsageLog ul) -> ul.duration >= 1000*10)
-                .collect(Collectors.toList());
         usageLogs.sort((u1, u2) -> (int) (u2.duration - u1.duration));
 
         long count = 0;
@@ -294,7 +287,7 @@ public class HomeActivity extends AppCompatActivity {
                 } else {
                     rate = (int) (((double) ul.duration / (double) count) * 100);
 
-                    if(rate < 5){
+                    if (rate < 5) {
                         rate = 5;
                     }
                 }
@@ -315,7 +308,7 @@ public class HomeActivity extends AppCompatActivity {
         List<String> xLAxisValues = new ArrayList<>();
         List<Float> yLAxisValues = new ArrayList<>();
 
-        // 横坐标
+        // NOTE: 横坐标
         xLAxisValues.add("00:00");
         xLAxisValues.add("");
         xLAxisValues.add("");
@@ -331,31 +324,31 @@ public class HomeActivity extends AppCompatActivity {
         xLAxisValues.add("23:00");
 
         List<Long> timeList = AppUtils.getDayTimestamps();
-
         int allDuration = 0;
-        int count = 0;
-        for(; count<timeList.size()-1; count++){
-            List<UsageLog> usageLogs = DatabaseService.getFromTo(timeList.get(count), timeList.get(count+1));
 
+        for (int count = 0; count < timeList.size() - 1; count++) {
+            List<UsageLog> usageLogs = DatabaseService.getFromTo(timeList.get(count), timeList.get(count+1));
             long amount = 0;
+
             for(UsageLog us: usageLogs){
                 amount+=us.duration;
             }
 
             allDuration += amount;
-
             yLAxisValues.add((float)(amount / 1000 / 60));
         }
 
+        // NOTE: mock the final data
         yLAxisValues.add((float)(0));
 
         TextView allDurationTextView = findViewById(R.id.AllDataTitle);
         String allDurationText;
+
         allDuration = allDuration / 1000 / 60;
         if (allDuration < 60) {
             allDurationText = allDuration + " mins";
         } else {
-            allDurationText = allDuration /60 + " hrs " + allDuration%60 + " mins";
+            allDurationText = allDuration / 60 + " hrs " + allDuration%60 + " mins";
         }
 
         allDurationTextView.setText(allDurationText);
@@ -369,7 +362,6 @@ public class HomeActivity extends AppCompatActivity {
     @SuppressLint("SetTextI18n")
     private void drawPieChart() {
         PieChart pieChart = findViewById(R.id.pieChart);
-
         List<UsageLog> usageLogs = DatabaseService.getFrom(AppUtils.getDayTimestamp());
         PackageManager pm = getApplicationContext().getPackageManager();
         HashMap<String, Integer> map = new HashMap<>();
@@ -378,8 +370,8 @@ public class HomeActivity extends AppCompatActivity {
             try {
                 ApplicationInfo appInfo = this.getPackageManager().getApplicationInfo(ul.name, 0);
                 String name = (String) pm.getApplicationLabel(appInfo);
-
                 int count = map.containsKey(name) ? map.get(name) : 0;
+
                 map.put(name, count + 1);
             } catch (PackageManager.NameNotFoundException e) {
                 // e.printStackTrace();
@@ -387,8 +379,7 @@ public class HomeActivity extends AppCompatActivity {
         }
 
         TextView countTextView = findViewById(R.id.CountDataTitle);
-        countTextView.setText("App Opened " + usageLogs.size() + " times");
-
+        countTextView.setText("App open " + usageLogs.size() + " times");
         Map<String, Integer> pieValues = new LinkedHashMap<>();
         int count = 0;
 
@@ -412,9 +403,8 @@ public class HomeActivity extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.Q)
     private void initUsageRanking() {
         UsageStatsManager manager = (UsageStatsManager)getApplicationContext().getSystemService(USAGE_STATS_SERVICE);
-        List<UsageLog> usageLogs = new ArrayList<>();
-
         List<UsageStats> usageStatsList = manager.queryUsageStats(UsageStatsManager.INTERVAL_WEEKLY, AppUtils.get7DaysAgoTimestamp(), System.currentTimeMillis());
+        List<UsageLog> usageLogs = new ArrayList<>();
 
         usageStatsList = usageStatsList.stream()
                 .filter((UsageStats us) -> us.getTotalTimeInForeground() != 0 && !us.getPackageName().equals("com.leeeshuang.myfirstapp"))
@@ -435,11 +425,7 @@ public class HomeActivity extends AppCompatActivity {
             durationMap.put(name, duration + ul.duration);
         }
 
-        usageLogs.sort((u1, u2) -> {
-            return (int) (u1.lastUsedAt - u2.lastUsedAt);
-        });
-
-        HashMap<String, UsageLog> map = new HashMap<String, UsageLog>();
+        HashMap<String, UsageLog> map = new HashMap<>();
 
         for (UsageLog ul: usageLogs) {
             map.put(ul.name, ul);
@@ -453,9 +439,6 @@ public class HomeActivity extends AppCompatActivity {
             }
         }
 
-        usageLogs = usageLogs.stream()
-                .filter((UsageLog ul) -> ul.duration >= 1000*10 && !ul.name.equals("com.leeeshuang.myfirstapp"))
-                .collect(Collectors.toList());
         usageLogs.sort((u1, u2) -> (int) (u2.duration - u1.duration));
 
         int count = 1;
@@ -545,7 +528,7 @@ public class HomeActivity extends AppCompatActivity {
             allAmount += ul.duration;
         }
 
-        String allDurationText = "";
+        String allDurationText;
         allAmount = allAmount / 1000 / 60 / 7;
 
         if (allAmount < 60) {

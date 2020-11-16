@@ -138,7 +138,7 @@
                         style="@style/DashboardSubtitleTextStyle"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="App Screen time" />
+                        android:text="App usage time" />
 
                     <LinearLayout
                         android:id="@+id/appListLayout"
@@ -198,7 +198,7 @@
                     <TextView
                         android:id="@+id/CountDataTitle"
                         style="@style/DashboardSubtitleTextStyle"
-                        android:text="App Opened 0 times" />
+                        android:text="App Open 0 times" />
 
                     <com.github.mikephil.charting.charts.PieChart
                         android:id="@+id/pieChart"
